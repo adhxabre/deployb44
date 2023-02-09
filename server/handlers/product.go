@@ -155,6 +155,21 @@ func (h *handlerProduct) UpdateProduct(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, dto.ErrorResult{Code: http.StatusInternalServerError, Message: err.Error()})
 	}
 
+	var ctx = context.Background()
+	var CLOUD_NAME = os.Getenv("CLOUD_NAME")
+	var API_KEY = os.Getenv("API_KEY")
+	var API_SECRET = os.Getenv("API_SECRET")
+
+	// Add your Cloudinary credentials ...
+	cld, _ := cloudinary.NewFromParams(CLOUD_NAME, API_KEY, API_SECRET)
+
+	// Upload file to Cloudinary ...
+	resp, err := cld.Upload.Upload(ctx, dataFile, uploader.UploadParams{Folder: "refactor-dumbmerch"})
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
 	id, _ := strconv.Atoi(c.Param("id"))
 
 	product, err := h.ProductRepository.GetProduct(id)
@@ -176,7 +191,7 @@ func (h *handlerProduct) UpdateProduct(c echo.Context) error {
 	}
 
 	if request.Image != "" {
-		product.Image = request.Image
+		product.Image = resp.SecureURL
 	}
 
 	if request.Qty != 0 {
