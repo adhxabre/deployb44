@@ -48,7 +48,7 @@ export default function Login() {
 
       // Status check
       if (response.data.data.role === 'admin') {
-        navigate('/complain-admin');
+        navigate('/product-admin');
       } else {
         navigate('/');
       }
