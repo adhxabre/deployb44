@@ -1,139 +1,116 @@
-# Deploy backend to railway
+# Cloudinary
 
-`Railway` is a cloud platform as a service supporting several programming languages.
+`Cloudinary` is a cloud-based image and video management services. It enables users to upload, store, manage, manipulate, and deliver images and video for websites and apps.
 
-- Install postgres
+Reference: [Offical Cloudinary Website](https://cloudinary.com/documentation/go_integration)
+
+### Prepare
+
+- Login to [cloudinary](https://cloudinary.com/)
+
+* Click `Media Library`
+
+* Create a folder that will be used to store files
+
+  ![img-1](./img-1.png)
+
+* Go to `Settings` → `Upload`
+
+* Scroll down to `Upload presets`, Click `Add upload preset` → fill in the form and click `save`
+
+### Server side (backend)
+
+- Install cloudinary
+
+  ```
+  go get github.com/cloudinary/cloudinary-go/v2
+  ```
+
+- On `upload_file.go` file delete split `uploads/` code and change `data` variable to `ctx` (on parameter 3)
+
+  > File: `pkg/middleware/upload_file.go`
 
   ```go
-  go get -u gorm.io/driver/postgres
+  data := tempFile.Name()
+
+  c.Set("dataFile", data)
+  return next(c)
   ```
 
-- Modify connection database with `env` and `postgres`
+- On handler `product.go` file
 
-  > File: `pkg/mysql/mysql.go`
+  > File: `handlers/product.go`
 
-  - Import postgres package
-
-    ```go
-    "gorm.io/driver/postgres"
-    ```
-
-  - Get `host`, `user`, `password`, `database name`, and `port` from env
+  - Import pakcage
 
     ```go
-    var DB_HOST = os.Getenv("DB_HOST")
-    var DB_USER = os.Getenv("DB_USER")
-    var DB_PASSWORD = os.Getenv("DB_PASSWORD")
-    var DB_NAME = os.Getenv("DB_NAME")
-    var DB_PORT = os.Getenv("DB_PORT")
+    "context"
+    "github.com/cloudinary/cloudinary-go/v2"
+    "github.com/cloudinary/cloudinary-go/v2/api/uploader"
     ```
 
-  - Setup Database connection
+  - On `CreateProduct` method, declare `context background`, `CLOUD_NAME`, `API_KEY`, `API_SECRET`
 
     ```go
-    dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s", DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT)
-    DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+    var ctx = context.Background()
+    var CLOUD_NAME = os.Getenv("CLOUD_NAME")
+    var API_KEY = os.Getenv("API_KEY")
+    var API_SECRET = os.Getenv("API_SECRET")
     ```
 
-* Modify the server port from env
+  - On `CreateProduct` method, Add Cloudinary credentials and Upload file to your Cloudinary folder
 
-  > File: `main.go`
+    ```go
+    // Add your Cloudinary credentials ...
+    cld, _ := cloudinary.NewFromParams(CLOUD_NAME, API_KEY, API_SECRET)
 
-  ```javascript
-  var port = os.Getenv("PORT");
-  ```
+    // Upload file to Cloudinary ...
+    resp, err := cld.Upload.Upload(ctx, filepath, uploader.UploadParams{Folder: "dumbmerch"});
 
-* Go to Railway web : [Link]https://railway.app/) & Start a new project
-
-* Sign up and verify first if you haven't already
-
-* Create repository on github & push restAPI project
-
-* On railway, Choose `New Project` → Search your repository & click `deploy now`
-
-* Click your projects and click `Settings`, scroll down to and click `generate domain`, you will now have your own domain for backend
-
-* On some space on board, right click and select database, and chosee `Add PostgreSQL`
-
-* Click it, and select `Variables`, there is your database credentials, you can use it later.
-
-* Okay, now go back to select your projects and choose `Variables`, drop all of your env key & value there, you can also use `RAW Editor`
-
-  | VARIABLE        | VALUE                                                            |
-  | --------------- | ---------------------------------------------------------------- |
-  | PATH_FILE       | https://<yourbackenddomain.tld>/uploads/                         |
-  | SECRET_KEY      | suryaganteng                                                     |
-  | SERVER_KEY      | SB-Mid-server-fJxxxxxxxxxxxxxxxxxxx3                             |
-  | CLIENT_KEY      | SB-Mid-client-YUxxxxxxxxxxxxxMS                                  |
-  | EMAIL_SYSTEM    | suryaelidanto@gmail.com                                          |
-  | PASSWORD_SYSTEM | rqxxxxxxxxxxxuu                                                  |
-  | DB_HOST         | exx-xx-xx-xxx-xx.compute-1.amazonaws.com                         |
-  | DB_NAME         | dboxxxxxxxb9e                                                    |
-  | DB_PASSWORD     | bxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxc |
-  | DB_PORT         | xxxx                                                             |
-  | DB_USER         | etxxxxxxxxxls                                                    |
-
-# Deploy frontend to vercel
-
-- First Modify `Midtrans Client Key` and config `baseUrl` from ENV
-
-  - Midtrans Client Key
-
-    > File: `src/pages/DetailProduct.js`
-
-    ```javascript
-    const myMidtransClientKey = process.env.REACT_APP_MIDTRANS_CLIENT_KEY;
-    ```
-
-  - Config `baseUrl`
-
-    > File: `src/config/api.js`
-
-    ```javascript
-    {
-        baseURL: process.env.REACT_APP_BASEURL,
+    if err != nil {
+      fmt.Println(err.Error())
     }
     ```
 
-- Create repository & push frontend project
+  - On `CreateProduct` method, modify store file URL to `database` from `resp.SecureURL`
 
-- Go to [Vercel](http://vercel.com) → Login → Click `Add New` -> `Project`
+    ```go
+    product := models.Product{
+      Name:   request.Name,
+      Desc:   request.Desc,
+      Price:  request.Price,
+      Image:  resp.SecureURL, // Modify store file URL to database from resp.SecureURL ...
+      Qty:    request.Qty,
+      UserID: userId,
+      Category:	category,
+    }
+    ```
 
-* Pick a your project repository, click `import`
+- Make sure modify this below code:
 
-* You can also choose your client folder in `root directory` (so you if you have 2 folder in one branch, you can select one, in example `client` folder)
+  > File: `handlers/product.go`
 
-* Now scroll down and click `Environment Variables`
+  - On `FindProducts` method, `delete` pathfile manipulation
 
-* And add like this : 
+    ```go
+    for i, p := range products {
+      imagePath := os.Getenv("PATH_FILE") + p.Image
+      products[i].Image = imagePath
+    }
+    ```
 
-  | VARIABLE                      | VALUE                            |
-  | ----------------------------- | -------------------------------- |
-  | REACT_APP_MIDTRANS_CLIENT_KEY | SB-Mid-client-YUxxxxxxxxxxxxxMS  |
-  | REACT_APP_BASEURL             | https://<backend_domain>/api/v1/ |
+  - On `GetProduct` method, `delete` pathfile manipulation
 
-- Click `Deploy`
+    ```go
+    product.Image = os.Getenv("PATH_FILE") + product.Image
+    ```
 
-- Wait deploy progress
+- Add `CLOUD_NAME`, `API_KEY`, `API_SECRET` variable and the values to `.env`
 
-- Oh no! it's error
+  > File: `.env`
 
-  ![image](./error.png)
-
-- Don't worry, it's just because our projects use older node js version.
-
-- First, you go to dashboard first and select your latest projects
-
-- Go to settings, scroll down, and select node js version 16.
-
-  ![image](./nodejs16.png)
-
-- And then Redeploy, just click Redeploy
-
-  ![image](./redeploy.png)
-
-  ![image](./redeploy2.png)
-
-- Click the link for open web
-
-- Done :D
+  ```.env
+  CLOUD_NAME=your_cloud_name_here...
+  API_KEY=your_api_key_here...
+  API_SECRET=your_api_secret_here...
+  ```
