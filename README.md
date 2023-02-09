@@ -1,6 +1,6 @@
 # Deploy backend to railway
 
-`Railway` is a cloud platform as a service supporting several programming languages. One of the first cloud platforms, Railway has been in development since June 2007, when it supported only the Ruby programming language, but now supports Java, Node.js, Scala, Clojure, Python, PHP, and `Go`.
+`Railway` is a cloud platform as a service supporting several programming languages.
 
 - Install postgres
 
@@ -43,45 +43,37 @@
   var port = os.Getenv("PORT");
   ```
 
-* Go to Railway web : [Link]https://railway.app/) & Create new app
+* Go to Railway web : [Link]https://railway.app/) & Start a new project
 
-* Fill out the form → click `Create app`
-
-* Go to Resources → add `Railway Postgress` on Add-ons
+* Sign up and verify first if you haven't already
 
 * Create repository on github & push restAPI project
 
-* On railway, Go to `Deploy` → Search repository & click `connect`
+* On railway, Choose `New Project` → Search your repository & click `deploy now`
 
-* Scroll down, click `Enable Automatic Deploys`, Choose a branch & click `Deploy Branch`
+* Click your projects and click `Settings`, scroll down to and click `generate domain`, you will now have your own domain for backend
 
-* Go to `Settings`, scroll down to `Config Vars`, Add the `config vars` from dotenv file
+* On some space on board, right click and select database, and chosee `Add PostgreSQL`
 
-  ![image](./img-1.png)
+* Click it, and select `Variables`, there is your database credentials, you can use it later.
+
+* Okay, now go back to select your projects and choose `Variables`, drop all of your env key & value there, you can also use `RAW Editor`
 
   | VARIABLE        | VALUE                                                            |
   | --------------- | ---------------------------------------------------------------- |
-  | PATH_FILE       | https://<backend_domain>/uploads/                                |
-  | SECRET_KEY      | bebas apa saja ...                                               |
+  | PATH_FILE       | https://<yourbackenddomain.tld>/uploads/                         |
+  | SECRET_KEY      | suryaganteng                                                     |
   | SERVER_KEY      | SB-Mid-server-fJxxxxxxxxxxxxxxxxxxx3                             |
   | CLIENT_KEY      | SB-Mid-client-YUxxxxxxxxxxxxxMS                                  |
-  | EMAIL_SYSTEM    | demo.dumbways@gmail.com                                          |
+  | EMAIL_SYSTEM    | suryaelidanto@gmail.com                                          |
   | PASSWORD_SYSTEM | rqxxxxxxxxxxxuu                                                  |
   | DB_HOST         | exx-xx-xx-xxx-xx.compute-1.amazonaws.com                         |
   | DB_NAME         | dboxxxxxxxb9e                                                    |
   | DB_PASSWORD     | bxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxc |
-  | DB_PORT         | 5432                                                             |
+  | DB_PORT         | xxxx                                                             |
   | DB_USER         | etxxxxxxxxxls                                                    |
 
-* Get Database Connection Setup from `Resources` &rarr; `Railway Postgres` &rarr; `Settings` &rarr; `View Credentials`
-
-  ![image](./img-2.png)
-
-* Then to ensure our Backend is deployed, we can click `Open App`
-
 # Deploy frontend to vercel
-
-`Vercel` is a San Francisco-based cloud computing company that offers hosting and serverless backend or frontend services for web applications and static websites.
 
 - First Modify `Midtrans Client Key` and config `baseUrl` from ENV
 
@@ -105,25 +97,43 @@
 
 - Create repository & push frontend project
 
-- Go to [Vercel](http://vercel.com) → Login → Click `New site from Git`
+- Go to [Vercel](http://vercel.com) → Login → Click `Add New` -> `Project`
 
-* Connect to Git provider, click `Github`
+* Pick a your project repository, click `import`
 
-* Pick a repository
+* You can also choose your client folder in `root directory` (so you if you have 2 folder in one branch, you can select one, in example `client` folder)
 
-* Site settings, and deploy
+* Now scroll down and click `Environment Variables`
 
-* Scroll down, modify Build command to `CI= npm run build`. Click `Show advanced`
-
-* Click `New variable` for add `environment variables`
+* And add like this : 
 
   | VARIABLE                      | VALUE                            |
   | ----------------------------- | -------------------------------- |
   | REACT_APP_MIDTRANS_CLIENT_KEY | SB-Mid-client-YUxxxxxxxxxxxxxMS  |
   | REACT_APP_BASEURL             | https://<backend_domain>/api/v1/ |
 
-- Click `Deploy site`
+- Click `Deploy`
 
 - Wait deploy progress
 
+- Oh no! it's error
+
+  ![image](./error.png)
+
+- Don't worry, it's just because our projects use older node js version.
+
+- First, you go to dashboard first and select your latest projects
+
+- Go to settings, scroll down, and select node js version 16.
+
+  ![image](./nodejs16.png)
+
+- And then Redeploy, just click Redeploy
+
+  ![image](./redeploy.png)
+
+  ![image](./redeploy2.png)
+
 - Click the link for open web
+
+- Done :D
