@@ -39,8 +39,14 @@
 
   > File: `main.go`
 
-  ```javascript
+  ```go
   var port = os.Getenv("PORT");
+  ```
+
+* Make sure you modify `localhost` to just blank just like this :
+  ```go
+	fmt.Println("server running localhost:" + PORT)
+	e.Logger.Fatal(e.Start(":" + PORT)) // delete localhost
   ```
 
 * Go to Railway web : [Link]https://railway.app/) & Start a new project
