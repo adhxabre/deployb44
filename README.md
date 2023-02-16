@@ -86,6 +86,8 @@ Reference: [Offical Cloudinary Website](https://cloudinary.com/documentation/go_
     }
     ```
 
+  - You can do the same on `UpdateProduct` method :D
+
 - Make sure modify this below code:
 
   > File: `handlers/product.go`
