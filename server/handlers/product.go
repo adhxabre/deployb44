@@ -1,19 +1,28 @@
 package handlers
 
 import (
+	"context"
 	productdto "dumbmerch/dto/product"
 	dto "dumbmerch/dto/result"
 	"dumbmerch/models"
 	"dumbmerch/repositories"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
 
+	"github.com/cloudinary/cloudinary-go/v2"
+	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
 )
+
+var ctx = context.Background()
+var CLOUD_NAME = os.Getenv("CLOUD_NAME")
+var API_KEY = os.Getenv("API_KEY")
+var API_SECRET = os.Getenv("API_SECRET")
 
 type handlerProduct struct {
 	ProductRepository repositories.ProductRepository
@@ -30,10 +39,6 @@ func (h *handlerProduct) FindProducts(c echo.Context) error {
 	}
 
 	// delete this
-	for i, p := range products {
-		imagePath := os.Getenv("PATH_FILE") + p.Image
-		products[i].Image = imagePath
-	}
 
 	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: products})
 }
@@ -48,14 +53,13 @@ func (h *handlerProduct) GetProduct(c echo.Context) error {
 	}
 
 	// delete this
-	product.Image = os.Getenv("PATH_FILE") + product.Image
 
 	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: convertResponseProduct(product)})
 }
 
 func (h *handlerProduct) CreateProduct(c echo.Context) error {
 	var err error
-	dataFile := c.Get("dataFile").(string)
+	filepath := c.Get("dataFile").(string)
 
 	price, _ := strconv.Atoi(c.FormValue("price"))
 	qty, _ := strconv.Atoi(c.FormValue("qty"))
@@ -79,7 +83,7 @@ func (h *handlerProduct) CreateProduct(c echo.Context) error {
 		Name:       c.FormValue("name"),
 		Desc:       c.FormValue("desc"),
 		Price:      price,
-		Image:      dataFile,
+		Image:      filepath,
 		Qty:        qty,
 		CategoryID: categoriesId,
 	}
@@ -91,6 +95,15 @@ func (h *handlerProduct) CreateProduct(c echo.Context) error {
 	}
 
 	// code here
+	// Add your Cloudinary credentials ...
+	cld, _ := cloudinary.NewFromParams(CLOUD_NAME, API_KEY, API_SECRET)
+
+	// Upload file to Cloudinary ...
+	resp, err := cld.Upload.Upload(ctx, filepath, uploader.UploadParams{Folder: "dumbmerchb44"})
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 
 	userLogin := c.Get("userLogin")
 	userId := userLogin.(jwt.MapClaims)["id"].(float64)
@@ -101,7 +114,7 @@ func (h *handlerProduct) CreateProduct(c echo.Context) error {
 		Name:     request.Name,
 		Desc:     request.Desc,
 		Price:    request.Price,
-		Image:    request.Image,
+		Image:    resp.SecureURL,
 		Qty:      request.Qty,
 		Category: categories,
 		UserID:   int(userId),
@@ -119,7 +132,7 @@ func (h *handlerProduct) CreateProduct(c echo.Context) error {
 
 func (h *handlerProduct) UpdateProduct(c echo.Context) error {
 	var err error
-	dataFile := c.Get("dataFile").(string)
+	filepath := c.Get("dataFile").(string)
 
 	price, _ := strconv.Atoi(c.FormValue("price"))
 	qty, _ := strconv.Atoi(c.FormValue("qty"))
@@ -135,7 +148,7 @@ func (h *handlerProduct) UpdateProduct(c echo.Context) error {
 		Name:       c.FormValue("name"),
 		Desc:       c.FormValue("desc"),
 		Price:      price,
-		Image:      dataFile,
+		Image:      filepath,
 		Qty:        qty,
 		CategoryID: categoriesId,
 	}
@@ -147,6 +160,15 @@ func (h *handlerProduct) UpdateProduct(c echo.Context) error {
 	}
 
 	// code here
+	// Add your Cloudinary credentials ...
+	cld, _ := cloudinary.NewFromParams(CLOUD_NAME, API_KEY, API_SECRET)
+
+	// Upload file to Cloudinary ...
+	resp, err := cld.Upload.Upload(ctx, filepath, uploader.UploadParams{Folder: "dumbmerchb44"})
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 
 	id, _ := strconv.Atoi(c.Param("id"))
 
@@ -169,7 +191,7 @@ func (h *handlerProduct) UpdateProduct(c echo.Context) error {
 	}
 
 	if request.Image != "" {
-		product.Image = request.Image // change this
+		product.Image = resp.SecureURL // change this
 	}
 
 	if request.Qty != 0 {

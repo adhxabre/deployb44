@@ -35,9 +35,9 @@ func UploadFile(next echo.HandlerFunc) echo.HandlerFunc {
 
 			data := tempFile.Name()
 
-			filename := data[8:] // delete this
+			// filename := data[8:]
 
-			c.Set("dataFile", filename) // change this
+			c.Set("dataFile", data) // change this
 			return next(c)
 		}
 
